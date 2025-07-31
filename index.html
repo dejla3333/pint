@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simple Paint App</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    background: #121212;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #eee;
+  }
+
+  h1 {
+    margin: 20px 0 10px;
+    color: #39a0ed;
+  }
+
+  #toolbar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+  }
+
+  #toolbar > * {
+    padding: 8px 12px;
+    background: #222;
+    border: none;
+    border-radius: 6px;
+    color: #eee;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+  }
+  #toolbar > *:hover {
+    background: #39a0ed;
+  }
+
+  #colorPicker {
+    width: 50px;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  #brushSize {
+    width: 80px;
+  }
+
+  #clearBtn {
+    background: #e74c3c;
+  }
+  #clearBtn:hover {
+    background: #c0392b;
+  }
+
+  canvas {
+    border: 2px solid #39a0ed;
+    border-radius: 12px;
+    background: #1e1e1e;
+    box-shadow: 0 0 20px #39a0ed66;
+  }
+</style>
+</head>
+<body>
+
+<h1> Paint App</h1>
+
+<div id="toolbar">
+  <input type="color" id="colorPicker" value="#39a0ed" title="Select Color" />
+  <input type="range" id="brushSize" min="1" max="30" value="5" title="Brush Size" />
+  <button id="clearBtn">Clear</button>
+</div>
+
+<canvas id="paintCanvas" width="800" height="500"></canvas>
+
+<script>
+  const canvas = document.getElementById('paintCanvas');
+  const ctx = canvas.getContext('2d');
+  const colorPicker = document.getElementById('colorPicker');
+  const brushSize = document.getElementById('brushSize');
+  const clearBtn = document.getElementById('clearBtn');
+
+  let painting = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  // Set initial brush settings
+  ctx.strokeStyle = colorPicker.value;
+  ctx.lineWidth = brushSize.value;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function startPosition(e) {
+    painting = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  }
+
+  function finishedPosition() {
+    painting = false;
+    ctx.beginPath(); // Reset path
+  }
+
+  function draw(e) {
+    if (!painting) return;
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = brushSize.value;
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+  }
+
+  // Event listeners for mouse
+  canvas.addEventListener('mousedown', startPosition);
+  canvas.addEventListener('mouseup', finishedPosition);
+  canvas.addEventListener('mouseout', finishedPosition);
+  canvas.addEventListener('mousemove', draw);
+
+  // Touch support for mobile/tablet
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    lastX = touch.clientX - rect.left;
+    lastY = touch.clientY - rect.top;
+    painting = true;
+  });
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    painting = false;
+    ctx.beginPath();
+  });
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!painting) return;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = brushSize.value;
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    lastX = x;
+    lastY = y;
+  });
+
+  // Clear canvas
+  clearBtn.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
+
+</script>
+
+</body>
+</html>
